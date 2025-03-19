@@ -1,5 +1,6 @@
 import jwt, { JwtPayload } from "jsonwebtoken";
 import { Request, Response, NextFunction } from "express";
+import { JWT_SECRET } from "@repo/backend-common/config";
 
 export const userMiddleware = (req: Request, res: Response, next: NextFunction) => {
     const authorization = req.headers["authorization"];
@@ -22,7 +23,7 @@ export const userMiddleware = (req: Request, res: Response, next: NextFunction) 
 
     try {
         // put a secret key from .env file
-        const verifiedToken = jwt.verify(token, 'hell') as JwtPayload;
+        const verifiedToken = jwt.verify(token, JWT_SECRET) as JwtPayload;
 
         if(!verifiedToken || !verifiedToken.userId) {
             res.status(401).json({
