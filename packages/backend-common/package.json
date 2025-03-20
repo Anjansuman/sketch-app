@@ -1,10 +1,9 @@
 {
   "name": "@repo/backend-common",
   "version": "1.0.0",
-  "description": "",
   "main": "index.js",
   "exports": {
-    "./config": "./src/config.ts"
+    "./secrets": "./src/secrets.ts"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -15,8 +14,5 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "type": "commonjs",
-  "dependencies": {
-    "@types/node": "^22.13.9"
-  }
+  "description": ""
 }

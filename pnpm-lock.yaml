@@ -39,6 +39,9 @@ importers:
       '@repo/common':
         specifier: workspace:*
         version: link:../../packages/common
+      '@repo/database':
+        specifier: workspace:*
+        version: link:../../packages/database
       '@repo/typescript-config':
         specifier: workspace:*
         version: link:../../packages/typescript-config
@@ -98,18 +101,11 @@ importers:
       '@repo/backend-common':
         specifier: workspace:*
         version: link:../../packages/backend-common
-      '@repo/common':
-        specifier: workspace:*
-        version: link:../../packages/common
       '@repo/typescript-config':
         specifier: workspace:*
         version: link:../../packages/typescript-config
 
   packages/backend-common:
-    dependencies:
-      '@types/node':
-        specifier: ^22.13.9
-        version: 22.13.9
     devDependencies:
       '@repo/typescript-config':
         specifier: workspace:*
@@ -125,7 +121,7 @@ importers:
         specifier: workspace:*
         version: link:../typescript-config
 
-  packages/db:
+  packages/database:
     dependencies:
       '@prisma/client':
         specifier: 6.5.0

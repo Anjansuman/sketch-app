@@ -1,6 +1,6 @@
 import jwt, { JwtPayload } from "jsonwebtoken";
 import { Request, Response, NextFunction } from "express";
-import { JWT_SECRET } from "@repo/backend-common/config";
+import { JWT_SECRET } from "@repo/backend-common/secrets";
 
 export const userMiddleware = (req: Request, res: Response, next: NextFunction) => {
     const authorization = req.headers["authorization"];
