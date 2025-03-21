@@ -6,7 +6,7 @@ import { prismaClient } from "@repo/database/client";
 
 const router: Router = Router();
 
-router.post('/', userMiddleware, async (req, res) => {
+router.post('/create-room', async (req, res) => {
     try {
 
         const data = createRoomSchema.safeParse(req.body);
@@ -39,12 +39,41 @@ router.post('/', userMiddleware, async (req, res) => {
         res.status(200).json({
             message: "Room created successfully!",
             name: newRoom.slug,
-            admin: newRoom.adminId
+            admin: newRoom.adminId,
+            room: newRoom.id
         })
         
     } catch (error) {
         res.status(500).json({
             message: "Internal server error!"
+        });
+        return;
+    }
+});
+
+router.get('/:slug', async (req, res) => {
+    try {
+        
+        const slug = req.params.slug;
+        console.log(slug);
+
+        const room = await prismaClient.room.findFirst({
+            where: {
+                slug
+            }
+        });
+
+        console.log(room);
+
+        res.status(200).json({
+            room
+        });
+        return;
+
+    } catch (error) {
+        res.status(500).json({
+            message: "Internal server error!",
+            error
         });
         return;
     }

@@ -1,6 +1,7 @@
 import jwt, { JwtPayload } from "jsonwebtoken";
 import { WebSocket, WebSocketServer } from "ws";
 import { JWT_SECRET } from "@repo/backend-common/secrets";
+import { prismaClient } from "@repo/database/client";
 
 const wss = new WebSocketServer({ port: 8080 });
 
@@ -13,19 +14,35 @@ interface User {
 const users: User[] = [];
 
 function checkUser(token: string): string | null {
-    const decoded = jwt.verify(token, JWT_SECRET);
+    try {
 
-    if(typeof decoded == 'string') return null;
+        if(!token.startsWith("Bearer")) {
+            return null;
+        }
 
-    if(!decoded || !decoded.userId) return null;
+        const passedToken = token.split(" ")[1];
 
-    return decoded.userId;
+        if(!passedToken) {
+            return null;
+        }
+
+        const decoded = jwt.verify(passedToken, JWT_SECRET);
+
+        if(typeof decoded == 'string') return null;
+
+        if(!decoded || !decoded.userId) return null;
+
+        return decoded.userId;
+    } catch (error) {
+        return null;
+    }
 }
 
 wss.on('connection', (ws, request) => {
 
     const url = request.url;
     if(!url) {
+        ws.close();
         return;
     }
 
@@ -50,13 +67,14 @@ wss.on('connection', (ws, request) => {
         ws
     });
 
-    ws.on('message', (data) => {
+    // returning everytime is disconnecting the ws server I guess, do check it once
+    ws.on('message', async (data) => {
 
         if(typeof data == 'string') return;
 
         const parsedData = JSON.parse(data.toString()); // { type: join_room, roomId: id }
 
-        if(parsedData.type === 'join_room') {
+        if(parsedData.type === "join_room") {
             const user = users.find((x) => x.userId === userId && x.ws === ws);
 
             if(!user) return;
@@ -64,7 +82,7 @@ wss.on('connection', (ws, request) => {
             user.rooms.push(parsedData.roomId);
         }
 
-        if(parsedData.type === 'leave_room') {
+        if(parsedData.type === "leave_room") {
             const user = users.find((x) => x.userId === userId && x.ws === ws);
            
             if(!user) return;
@@ -72,11 +90,30 @@ wss.on('connection', (ws, request) => {
             user.rooms = user.rooms.filter((x) => x === parsedData.roomId)
         }
 
-        if(parsedData.type === 'chat') {
+        if(parsedData.type === "chat") {
             const roomId = parsedData.roomId;
-            const message = parsedData.message; // you
+            const message = parsedData.message; // you can do checks for abnoxious messages or too long things
 
+            //for now, before broadcasting the message store it in the db then broadcast
+            // after learning how to implement queue use that
 
+            await prismaClient.chat.create({
+                data: {
+                    roomId,
+                    userId,
+                    message
+                }
+            });
+
+            users.forEach(user => {
+                if(user.rooms.includes(roomId)) {
+                    user.ws.send(JSON.stringify({
+                        type: "chat",
+                        roomId: roomId,
+                        message: message
+                    }))
+                }
+            })
 
         }
 
