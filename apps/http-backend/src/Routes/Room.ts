@@ -6,7 +6,7 @@ import { prismaClient } from "@repo/database/client";
 
 const router: Router = Router();
 
-router.post('/create-room', async (req, res) => {
+router.post('/create-room', userMiddleware, async (req, res) => {
     try {
 
         const data = createRoomSchema.safeParse(req.body);
@@ -51,7 +51,7 @@ router.post('/create-room', async (req, res) => {
     }
 });
 
-router.get('/:slug', async (req, res) => {
+router.get('/:slug', userMiddleware, async (req, res) => {
     try {
         
         const slug = req.params.slug;
@@ -63,10 +63,15 @@ router.get('/:slug', async (req, res) => {
             }
         });
 
-        console.log(room);
+        if(!room) {
+            res.status(404).json({
+                message: "Room not found!"
+            });
+            return;
+        }
 
         res.status(200).json({
-            room
+            roomId: room.id
         });
         return;
 

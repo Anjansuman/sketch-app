@@ -4,7 +4,7 @@ import { prismaClient } from "@repo/database/client";
 
 const router: Router = Router();
 
-router.get('/:roomId', async (req, res) => {
+router.get('/:roomId', userMiddleware, async (req, res) => {
 
     try {
         const roomId = Number(req.params.roomId);

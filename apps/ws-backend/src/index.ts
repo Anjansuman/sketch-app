@@ -69,53 +69,56 @@ wss.on('connection', (ws, request) => {
 
     // returning everytime is disconnecting the ws server I guess, do check it once
     ws.on('message', async (data) => {
+        try {
 
-        if(typeof data == 'string') return;
+            if(typeof data == 'string') return;
 
-        const parsedData = JSON.parse(data.toString()); // { type: join_room, roomId: id }
+            const parsedData = JSON.parse(data.toString()); // { type: join_room, roomId: id }
 
-        if(parsedData.type === "join_room") {
-            const user = users.find((x) => x.userId === userId && x.ws === ws);
+            if(parsedData.type === "join_room") {
+                const user = users.find((x) => x.userId === userId && x.ws === ws);
 
-            if(!user) return;
+                if(!user) return;
 
-            user.rooms.push(parsedData.roomId);
+                user.rooms.push(parsedData.roomId);
+            }
+
+            if(parsedData.type === "leave_room") {
+                const user = users.find((x) => x.userId === userId && x.ws === ws);
+            
+                if(!user) return;
+
+                user.rooms = user.rooms.filter((x) => x === parsedData.roomId)
+            }
+
+            if(parsedData.type === "chat") {
+                const roomId = parsedData.roomId;
+                const message = parsedData.message; // you can do checks for abnoxious messages or too long things
+
+                //for now, before broadcasting the message store it in the db then broadcast
+                // after learning how to implement queue use that
+
+                await prismaClient.chat.create({
+                    data: {
+                        roomId: Number(roomId),
+                        userId,
+                        message
+                    }
+                });
+
+                users.forEach(user => {
+                    if(user.rooms.includes(roomId)) {
+                        user.ws.send(JSON.stringify({
+                            type: "chat",
+                            roomId: roomId,
+                            message: message
+                        }))
+                    }
+                })
+
+            }
+        } catch (error) {
+            console.log(error);
         }
-
-        if(parsedData.type === "leave_room") {
-            const user = users.find((x) => x.userId === userId && x.ws === ws);
-           
-            if(!user) return;
-
-            user.rooms = user.rooms.filter((x) => x === parsedData.roomId)
-        }
-
-        if(parsedData.type === "chat") {
-            const roomId = parsedData.roomId;
-            const message = parsedData.message; // you can do checks for abnoxious messages or too long things
-
-            //for now, before broadcasting the message store it in the db then broadcast
-            // after learning how to implement queue use that
-
-            await prismaClient.chat.create({
-                data: {
-                    roomId,
-                    userId,
-                    message
-                }
-            });
-
-            users.forEach(user => {
-                if(user.rooms.includes(roomId)) {
-                    user.ws.send(JSON.stringify({
-                        type: "chat",
-                        roomId: roomId,
-                        message: message
-                    }))
-                }
-            })
-
-        }
-
     })
 })
