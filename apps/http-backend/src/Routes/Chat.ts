@@ -23,7 +23,7 @@ router.get('/:roomId', userMiddleware, async (req, res) => {
             orderBy: {
                 id: 'desc'
             },
-            take: 50
+            take: 1000
         });
 
         res.status(200).json({
